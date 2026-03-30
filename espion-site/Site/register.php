@@ -413,15 +413,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <?php endif; ?>
 
-        <form method="POST" action="register.php">
+        <form method="POST" action="register.php" autocomplete="off">
             <div class="form-row">
                 <div class="form-group">
                     <label>Code Agent *</label>
-                    <input type="text" name="ncode" placeholder="ex: agent007" value="<?= htmlspecialchars($_POST['ncode'] ?? '') ?>" required>
+                    <input type="text" name="ncode" placeholder="ex: agent0000" value="<?= htmlspecialchars($_POST['ncode'] ?? '') ?>" required>
                 </div>
                 <div class="form-group">
                     <label>Email *</label>
-                    <input type="email" name="email" placeholder="agent@shadowcomm.net" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
+                    <input type="email" name="email" placeholder="ncodeagent@mail.com" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
                 </div>
             </div>
             <div class="form-row">
@@ -437,7 +437,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="form-row">
                 <div class="form-group">
                     <label>Âge</label>
-                    <input type="number" name="age" placeholder="Âge" min="18" max="99" value="<?= htmlspecialchars($_POST['age'] ?? '') ?>">
+                    <input type="number" name="age" placeholder="Âge" min="18" max="80" value="<?= htmlspecialchars($_POST['age'] ?? '') ?>">
                 </div>
                 <div class="form-group">
                     <label>Spécialité *</label>

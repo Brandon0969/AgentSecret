@@ -2,32 +2,57 @@
 session_start();
 require_once '../Data/config.php';
 
-$msgSuccess = false;
-$msgError   = '';
-$messages_recu = [];
-$agents = [];
+/* ── CHIFFREMENT CÉSAR (décalage fixe) ── */
+define('CAESAR_SHIFT', 7);
 
-if (isset($_SESSION['agent_ncode'])) {
-    $stmt = $db->prepare("SELECT ncode FROM users WHERE ncode != ? ORDER BY ncode");
-    $stmt->execute([$_SESSION['agent_ncode']]);
-    $agents = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-    if (isset($_POST['send_message'])) {
-        $receveur = trim($_POST['receveur'] ?? '');
-        $contenu  = trim($_POST['contenu']  ?? '');
-        if (!$receveur || !$contenu) {
-            $msgError = 'Destinataire et message requis.';
+function caesar_encrypt(string $text): string {
+    $shift  = CAESAR_SHIFT;
+    $result = '';
+    foreach (str_split($text) as $char) {
+        if (ctype_alpha($char)) {
+            $base   = ctype_upper($char) ? ord('A') : ord('a');
+            $result .= chr((ord($char) - $base + $shift) % 26 + $base);
         } else {
-            $ins = $db->prepare("INSERT INTO messages (expediteur, receveur, contenu) VALUES (?, ?, ?)");
-            $ins->execute([$_SESSION['agent_ncode'], $receveur, $contenu]);
-            $msgSuccess = true;
+            $result .= $char;
         }
     }
-
-    $m = $db->prepare("SELECT expediteur, contenu, created_at FROM messages WHERE receveur = ? ORDER BY created_at DESC LIMIT 10");
-    $m->execute([$_SESSION['agent_ncode']]);
-    $messages_recu = $m->fetchAll();
+    return $result;
 }
+
+function caesar_decrypt(string $text): string {
+    $shift  = 26 - (CAESAR_SHIFT % 26);
+    $result = '';
+    foreach (str_split($text) as $char) {
+        if (ctype_alpha($char)) {
+            $base   = ctype_upper($char) ? ord('A') : ord('a');
+            $result .= chr((ord($char) - $base + $shift) % 26 + $base);
+        } else {
+            $result .= $char;
+        }
+    }
+    return $result;
+}
+
+$msgSuccess = false;
+$msgError   = '';
+
+/* ── ENVOI SUR LE CANAL ── */
+if (isset($_SESSION['agent_ncode']) && isset($_POST['send_message'])) {
+    $contenu = trim($_POST['contenu'] ?? '');
+    if (!$contenu) {
+        $msgError = 'Le message ne peut pas être vide.';
+    } else {
+        $encrypted = caesar_encrypt($contenu);
+        $ins = $db->prepare("INSERT INTO canal (expediteur, contenu) VALUES (?, ?)");
+        $ins->execute([$_SESSION['agent_ncode'], $encrypted]);
+        $msgSuccess = true;
+    }
+}
+
+/* ── LECTURE DU CANAL (50 derniers messages) ── */
+$messages = $db->query(
+    "SELECT expediteur, contenu, created_at FROM canal ORDER BY created_at DESC LIMIT 50"
+)->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -442,17 +467,125 @@ if (isset($_SESSION['agent_ncode'])) {
             text-transform: uppercase;
         }
 
+        /* ── CANAL PUBLIC ── */
+        .canal-layout {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            align-items: start;
+        }
+
+        .canal-feed {
+            display: flex;
+            flex-direction: column;
+            gap: .75rem;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: .4rem;
+        }
+
+        .canal-feed::-webkit-scrollbar       { width: 4px; }
+        .canal-feed::-webkit-scrollbar-track { background: rgba(255, 255, 255, .03); }
+        .canal-feed::-webkit-scrollbar-thumb { background: var(--blue); border-radius: 4px; }
+
+        .msg-encrypted {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: .78rem;
+            color: #4ade80;
+            letter-spacing: .5px;
+            line-height: 1.6;
+            word-break: break-all;
+        }
+
+        .msg-plain {
+            font-size: .78rem;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .btn-decrypt {
+            margin-top: .5rem;
+            background: transparent;
+            border: 1px solid rgba(37, 99, 235, .4);
+            color: var(--blue);
+            font-family: 'Open Sans', sans-serif;
+            font-size: .62rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: .3rem .8rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all .3s;
+        }
+
+        .btn-decrypt:hover {
+            background: rgba(37, 99, 235, .15);
+            border-color: var(--blue);
+        }
+
+        .cipher-tag {
+            display: inline-block;
+            font-size: .55rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, .3);
+            border-radius: 10px;
+            padding: .1rem .5rem;
+            margin-left: .5rem;
+            vertical-align: middle;
+        }
+
+        .canal-empty {
+            font-size: .78rem;
+            color: var(--muted);
+            text-align: center;
+            padding: 3rem 0;
+            font-style: italic;
+        }
+
+        .shift-info {
+            font-size: .65rem;
+            color: var(--muted);
+            text-align: center;
+            margin-top: 1rem;
+            letter-spacing: .5px;
+        }
+
+        .shift-info strong {
+            color: var(--blue);
+        }
+
+        .comm-locked-inline {
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
+        .comm-locked-inline p {
+            font-size: .8rem;
+            color: var(--muted);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
         /* ── RESPONSIVE ── */
         @media (max-width: 1024px) {
-            nav           { padding: 1rem 2rem; }
-            .comm-section { padding: 3.5rem 2rem; }
-            .comm-grid    { grid-template-columns: 1fr; }
-            footer        { padding: 1.5rem 2rem; flex-direction: column; gap: .8rem; text-align: center; }
+            nav             { padding: 1rem 2rem; }
+            .comm-section   { padding: 3.5rem 2rem; }
+            .canal-layout   { grid-template-columns: 1fr; }
+            footer          { padding: 1.5rem 2rem; flex-direction: column; gap: .8rem; text-align: center; }
         }
 
         @media (max-width: 600px) {
-            nav ul        { display: none; }
-            .comm-section { padding: 3rem 1.5rem; }
+            nav ul          { display: none; }
+            .comm-section   { padding: 3rem 1.5rem; }
         }
     </style>
 </head>
@@ -482,70 +615,72 @@ if (isset($_SESSION['agent_ncode'])) {
 <div class="page-wrapper">
 <section class="comm-section">
     <div class="comm-header">
-        <p class="kicker">Transmission Securisee - Chiffree</p>
+        <p class="kicker">Canal Public — Chiffrement César +<?= CAESAR_SHIFT ?></p>
         <h2 class="sec-title">Centre de Communication</h2>
         <div class="divider"></div>
     </div>
 
-    <?php if (!isset($_SESSION['agent_ncode'])): ?>
-    <div class="comm-locked">
-        <div class="lock-icon">&#128274;</div>
-        <h3>Acces Restreint</h3>
-        <p>Vous devez etre authentifie pour acceder au centre de communication des agents.</p>
-        <a href="login.php" class="btn-primary">Se connecter</a>
-    </div>
+    <div class="canal-layout">
 
-    <?php else: ?>
-    <div class="comm-grid">
-
-        <!-- COMPOSER UN MESSAGE -->
+        <!-- FORMULAIRE D'ENVOI -->
         <div class="comm-box">
-            <p class="comm-box-title">� Nouvelle Transmission</p>
+            <p class="comm-box-title">📡 Nouvelle Transmission</p>
+
+            <?php if (!isset($_SESSION['agent_ncode'])): ?>
+            <div class="comm-locked-inline">
+                <div class="lock-icon">🔒</div>
+                <p>Connectez-vous pour émettre sur le canal ShadowComm.</p>
+                <a href="login.php" class="btn-primary">Se connecter</a>
+            </div>
+            <?php else: ?>
 
             <?php if ($msgSuccess): ?>
-            <div class="comm-success">✓ Message transmis avec succès.</div>
+            <div class="comm-success">✓ Transmission chiffrée envoyée sur le canal.</div>
             <?php elseif ($msgError): ?>
             <div class="comm-error">⚠ <?= htmlspecialchars($msgError) ?></div>
             <?php endif; ?>
 
             <form method="POST" action="centredecom.php">
                 <div class="comm-form-group">
-                    <label>Destinataire</label>
-                    <select name="receveur" required>
-                        <option value="">— Sélectionner un agent —</option>
-                        <?php foreach ($agents as $ag): ?>
-                        <option value="<?= htmlspecialchars($ag) ?>"
-                            <?= (($_POST['receveur'] ?? '') === $ag) ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($ag) ?>
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <label>Message en clair</label>
+                    <textarea name="contenu" rows="7"
+                        placeholder="Rédigez votre message... Il sera chiffré automatiquement avant envoi."
+                        required><?= htmlspecialchars($_POST['contenu'] ?? '') ?></textarea>
                 </div>
-                <div class="comm-form-group">
-                    <label>Message chiffré</label>
-                    <textarea name="contenu" rows="5" placeholder="Rédigez votre transmission..." required><?= htmlspecialchars($_POST['contenu'] ?? '') ?></textarea>
-                </div>
-                <button type="submit" name="send_message" class="btn-comm">Envoyer la transmission</button>
+                <button type="submit" name="send_message" class="btn-comm">
+                    🔐 Chiffrer &amp; Émettre
+                </button>
             </form>
+            <p class="shift-info">Algorithme : César &mdash; décalage <strong>+<?= CAESAR_SHIFT ?></strong></p>
+
+            <?php endif; ?>
         </div>
 
-        <!-- MESSAGES REÇUS -->
+        <!-- CANAL PUBLIC -->
         <div class="comm-box">
-            <p class="comm-box-title">📥 Messages Reçus
-                <span class="msg-box-info">Connecté : <strong><?= htmlspecialchars($_SESSION['agent_ncode']) ?></strong></span>
+            <p class="comm-box-title">
+                &#128251; Canal ShadowComm
+                <span class="cipher-tag">César +<?= CAESAR_SHIFT ?></span>
             </p>
 
-            <?php if (empty($messages_recu)): ?>
-            <p class="no-msg">Aucune transmission reçue.</p>
+            <?php if (empty($messages)): ?>
+            <p class="canal-empty">Aucune transmission sur le canal.</p>
             <?php else: ?>
-            <div class="msg-list">
-                <?php foreach ($messages_recu as $msg): ?>
+            <div class="canal-feed">
+                <?php foreach ($messages as $i => $msg): ?>
+                <?php $pair = 'msg-' . $i; $plain = caesar_decrypt($msg['contenu']); ?>
                 <div class="msg-item">
                     <div class="msg-meta">
-                        <span class="msg-from">De : <?= htmlspecialchars($msg['expediteur']) ?></span>
+                        <span class="msg-from"><?= htmlspecialchars($msg['expediteur']) ?></span>
                         <span class="msg-date"><?= date('d/m/Y H:i', strtotime($msg['created_at'])) ?></span>
                     </div>
-                    <p class="msg-body"><?= htmlspecialchars($msg['contenu']) ?></p>
+                    <p class="msg-encrypted" data-pair="<?= $pair ?>">
+                        <?= htmlspecialchars($msg['contenu']) ?>
+                    </p>
+                    <p class="msg-plain hidden" data-pair="<?= $pair ?>">
+                        <?= htmlspecialchars($plain) ?>
+                    </p>
+                    <button class="btn-decrypt" onclick="toggleDecrypt('<?= $pair ?>', this)">🔓 Déchiffrer</button>
                 </div>
                 <?php endforeach; ?>
             </div>
@@ -553,15 +688,28 @@ if (isset($_SESSION['agent_ncode'])) {
         </div>
 
     </div>
-    <?php endif; ?>
 </section>
 </div>
 
 <footer>
     <div class="footer-logo">ShadowComm</div>
-    <div class="footer-copy">&copy; <?= date('Y') ?> ShadowComm — Agence d'Espionnage. Tous droits reservés.</div>
-    <div class="footer-classified">&#11035; Classified — Acces Restreint</div>
+    <div class="footer-copy">&copy; <?= date('Y') ?> ShadowComm — Agence d'Espionnage. Tous droits réservés.</div>
+    <div class="footer-classified">&#11035; Classified — Accès Restreint</div>
 </footer>
+
+
+<script>
+    function toggleDecrypt(pair, btn) {
+        document.querySelectorAll('[data-pair="' + pair + '"]').forEach(function(el) {
+            el.classList.toggle('hidden');
+        });
+        if (btn.textContent.indexOf('Dé') !== -1) {
+            btn.textContent = '🔒 Rechiffrer';
+        } else {
+            btn.textContent = '🔓 Déchiffrer';
+        }
+    }
+</script>
 
 </body>
 </html>

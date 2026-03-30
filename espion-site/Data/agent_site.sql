@@ -24,18 +24,13 @@ CREATE TABLE grade (
     grade ENUM ('expert', 'confirme', 'novice') NOT NULL,
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
- CREATE TABLE messages (
-    id_message INT AUTO_INCREMENT PRIMARY KEY,
-    id_expediteur INT NOT NULL,
-    id_receveur INT NOT NULL,
-    contenu TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    INDEX (id_expediteur),
-    INDEX (id_receveur),
-
-    FOREIGN KEY (id_expediteur) REFERENCES users(id),
-    FOREIGN KEY (id_receveur) REFERENCES users(id),
+CREATE TABLE canal (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    expediteur  VARCHAR(50) NOT NULL,
+    contenu     TEXT NOT NULL,
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX (expediteur),
+    FOREIGN KEY (expediteur) REFERENCES users(ncode) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
     -- =====================

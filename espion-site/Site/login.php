@@ -357,7 +357,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="alert-error">⚠ <?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
 
-        <form method="POST" action="login.php">
+        <form method="POST" action="login.php" autocomplete="off">
             <div class="form-group">
                 <label>Code Agent ou Email</label>
                 <input type="text" name="identifiant" placeholder="agent007 ou agent@shadowcomm.net"

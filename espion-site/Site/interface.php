@@ -2,44 +2,14 @@
 session_start();
 require_once '../Data/config.php';
 
-$msgSuccess = false;
-$msgError   = '';
-$messages_recu = [];
-$agents = [];
-
-if (isset($_SESSION['agent_ncode'])) {
-
-    // Suppression de compte
-    if (isset($_POST['delete_account'])) {
-        $db->prepare("DELETE FROM messages WHERE expediteur = ? OR receveur = ?")
-           ->execute([$_SESSION['agent_ncode'], $_SESSION['agent_ncode']]);
-        $db->prepare("DELETE FROM users WHERE ncode = ?")
-           ->execute([$_SESSION['agent_ncode']]);
-        session_unset();
-        session_destroy();
-        header('Location: interface.php');
-        exit;
-    }
-
-    $stmt = $db->prepare("SELECT ncode FROM users WHERE ncode != ? ORDER BY ncode");
-    $stmt->execute([$_SESSION['agent_ncode']]);
-    $agents = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-    if (isset($_POST['send_message'])) {
-        $receveur = trim($_POST['receveur'] ?? '');
-        $contenu  = trim($_POST['contenu']  ?? '');
-        if (!$receveur || !$contenu) {
-            $msgError = 'Destinataire et message requis.';
-        } else {
-            $ins = $db->prepare("INSERT INTO messages (expediteur, receveur, contenu) VALUES (?, ?, ?)");
-            $ins->execute([$_SESSION['agent_ncode'], $receveur, $contenu]);
-            $msgSuccess = true;
-        }
-    }
-
-    $m = $db->prepare("SELECT expediteur, contenu, created_at FROM messages WHERE receveur = ? ORDER BY created_at DESC LIMIT 10");
-    $m->execute([$_SESSION['agent_ncode']]);
-    $messages_recu = $m->fetchAll();
+if (isset($_SESSION['agent_ncode']) && isset($_POST['delete_account'])) {
+    // Les messages du canal sont supprimés automatiquement par ON DELETE CASCADE
+    $db->prepare("DELETE FROM users WHERE ncode = ?")
+       ->execute([$_SESSION['agent_ncode']]);
+    session_unset();
+    session_destroy();
+    header('Location: interface.php');
+    exit;
 }
 ?>
 <!DOCTYPE html>
