@@ -48,72 +48,399 @@ $specLabel  = ['agent_double' => 'Agent Double', 'agent_informateur' => 'Informa
     <title>ShadowComm — Liste des Agents</title>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;}
-        :root{--blue:#2563eb;--dark:#07090d;--text:#dde6f0;--muted:#64748b;--border:rgba(255,255,255,0.07);}
-        body{font-family:'Open Sans',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
-        a{text-decoration:none;}
-        /* NAV */
-        nav{display:flex;align-items:center;justify-content:space-between;padding:1.3rem 4.5rem;border-bottom:1px solid var(--border);background:rgba(7,9,13,0.97);position:sticky;top:0;z-index:100;}
-        .logo{display:flex;align-items:center;gap:.8rem;}
-        .logo-icon{width:42px;height:42px;border:2px solid var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
-        .logo-name{font-family:'Rajdhani',sans-serif;font-size:1.45rem;font-weight:700;letter-spacing:2px;color:#fff;display:block;line-height:1.1;}
-        .logo-sub{font-size:.55rem;color:var(--muted);letter-spacing:3px;text-transform:uppercase;display:block;}
-        .nav-right{display:flex;align-items:center;gap:1.8rem;}
-        .nav-link{color:var(--muted);font-size:.78rem;letter-spacing:.5px;transition:color .3s;}
-        .nav-link:hover{color:#fff;}
-        .btn-nav{background:var(--blue);color:#fff;padding:.45rem 1.2rem;border-radius:30px;font-size:.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;transition:background .3s;}
-        .btn-nav:hover{background:#1d4ed8;}
-        /* PAGE HEADER */
-        .page-header{padding:3rem 4.5rem 2rem;border-bottom:1px solid var(--border);}
-        .page-kicker{font-size:.65rem;letter-spacing:4px;text-transform:uppercase;color:var(--blue);margin-bottom:.5rem;}
-        .page-title{font-family:'Rajdhani',sans-serif;font-size:2.8rem;font-weight:700;color:#fff;line-height:1;}
-        .page-sub{font-size:.8rem;color:var(--muted);margin-top:.5rem;}
-        .header-line{width:40px;height:2px;background:var(--blue);margin:.8rem 0 0;}
-        /* FILTERS */
-        .filters-bar{padding:1.5rem 4.5rem;border-bottom:1px solid var(--border);display:flex;gap:1rem;flex-wrap:wrap;align-items:center;}
-        .filter-input{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:.6rem 1rem;color:#fff;font-family:'Open Sans',sans-serif;font-size:.8rem;transition:border-color .3s;min-width:220px;}
-        .filter-input:focus{outline:none;border-color:var(--blue);}
-        .filter-input::placeholder{color:var(--muted);}
-        .filter-select{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:.6rem 1rem;color:#fff;font-family:'Open Sans',sans-serif;font-size:.8rem;transition:border-color .3s;cursor:pointer;}
-        .filter-select:focus{outline:none;border-color:var(--blue);}
-        .filter-select option{background:#0d1117;}
-        .btn-filter{background:var(--blue);color:#fff;border:none;border-radius:6px;padding:.6rem 1.4rem;font-family:'Open Sans',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:1px;cursor:pointer;transition:background .3s;}
-        .btn-filter:hover{background:#1d4ed8;}
-        .btn-reset{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:.6rem 1.1rem;font-family:'Open Sans',sans-serif;font-size:.75rem;cursor:pointer;transition:all .3s;}
-        .btn-reset:hover{color:#fff;border-color:rgba(255,255,255,.3);}
-        .result-count{margin-left:auto;font-size:.72rem;color:var(--muted);}
-        .result-count strong{color:var(--blue);}
-        /* TABLE */
-        main{flex:1;padding:2rem 4.5rem 3rem;}
-        .agents-table{width:100%;border-collapse:collapse;}
-        .agents-table thead th{font-size:.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:.8rem 1rem;text-align:left;border-bottom:1px solid var(--border);}
-        .agents-table tbody tr{border-bottom:1px solid var(--border);transition:background .2s;}
-        .agents-table tbody tr:hover{background:rgba(255,255,255,.025);}
-        .agents-table tbody td{padding:1rem 1rem;font-size:.82rem;color:var(--text);vertical-align:middle;}
-        .td-ncode{font-family:'Rajdhani',sans-serif;font-size:.95rem;font-weight:700;color:var(--blue);}
-        .td-name{font-weight:600;color:#fff;}
-        .td-name small{display:block;font-size:.7rem;color:var(--muted);font-weight:400;}
-        /* BADGES */
-        .badge{display:inline-block;padding:.25rem .75rem;border-radius:20px;font-size:.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
-        .badge-expert{background:rgba(234,179,8,.12);color:#fbbf24;border:1px solid rgba(234,179,8,.3);}
-        .badge-confirme{background:rgba(37,99,235,.15);color:#60a5fa;border:1px solid rgba(37,99,235,.35);}
-        .badge-novice{background:rgba(100,116,139,.12);color:#94a3b8;border:1px solid rgba(100,116,139,.3);}
-        .badge-double{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.25);}
-        .badge-info{background:rgba(168,85,247,.1);color:#c084fc;border:1px solid rgba(168,85,247,.25);}
-        .badge-cyber{background:rgba(20,184,166,.1);color:#2dd4bf;border:1px solid rgba(20,184,166,.25);}
-        /* EMPTY STATE */
-        .empty-state{text-align:center;padding:4rem 2rem;color:var(--muted);}
-        .empty-state .empty-icon{font-size:2.5rem;margin-bottom:1rem;}
-        .empty-state p{font-size:.85rem;}
-        /* FOOTER */
-        footer{border-top:1px solid var(--border);padding:1.5rem 4.5rem;display:flex;justify-content:space-between;align-items:center;}
-        .footer-logo{font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:700;color:#fff;letter-spacing:2px;}
-        .footer-classified{font-size:.6rem;color:rgba(37,99,235,.5);letter-spacing:3px;text-transform:uppercase;}
-        .nav-agent{color:var(--blue);font-size:.78rem;letter-spacing:.5px;}
-        .td-muted{color:var(--muted);font-size:.75rem;}
-        .text-na{color:var(--muted);font-style:italic;}
-        @media(max-width:1024px){nav,.page-header,.filters-bar,main,footer{padding-left:2rem;padding-right:2rem;}.filters-bar{flex-direction:column;align-items:stretch;}.result-count{margin-left:0;}}
-        @media(max-width:700px){.agents-table thead{display:none;}.agents-table tbody tr{display:block;padding:1rem;margin-bottom:.5rem;border:1px solid var(--border);border-radius:8px;}.agents-table tbody td{display:block;padding:.25rem 0;border:none;}.agents-table tbody td::before{content:attr(data-label)' : ';font-size:.6rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-right:.3rem;}}
+        /* ── RESET ── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ── VARIABLES ── */
+        :root {
+            --blue:   #2563eb;
+            --dark:   #07090d;
+            --text:   #dde6f0;
+            --muted:  #64748b;
+            --border: rgba(255, 255, 255, 0.07);
+        }
+
+        /* ── BASE ── */
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: var(--dark);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* ── NAVIGATION ── */
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.3rem 4.5rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(7, 9, 13, 0.97);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            border: 2px solid var(--blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .logo-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.45rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #fff;
+            display: block;
+            line-height: 1.1;
+        }
+
+        .logo-sub {
+            font-size: .55rem;
+            color: var(--muted);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            display: block;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1.8rem;
+        }
+
+        .nav-link {
+            color: var(--muted);
+            font-size: .78rem;
+            letter-spacing: .5px;
+            transition: color .3s;
+        }
+
+        .nav-link:hover {
+            color: #fff;
+        }
+
+        .nav-agent {
+            color: var(--blue);
+            font-size: .78rem;
+            letter-spacing: .5px;
+        }
+
+        .btn-nav {
+            background: var(--blue);
+            color: #fff;
+            padding: .45rem 1.2rem;
+            border-radius: 30px;
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            transition: background .3s;
+        }
+
+        .btn-nav:hover {
+            background: #1d4ed8;
+        }
+
+        /* ── EN-TÊTE DE PAGE ── */
+        .page-header {
+            padding: 3rem 4.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .page-kicker {
+            font-size: .65rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--blue);
+            margin-bottom: .5rem;
+        }
+
+        .page-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .page-sub {
+            font-size: .8rem;
+            color: var(--muted);
+            margin-top: .5rem;
+        }
+
+        .header-line {
+            width: 40px;
+            height: 2px;
+            background: var(--blue);
+            margin: .8rem 0 0;
+        }
+
+        /* ── BARRE DE FILTRES ── */
+        .filters-bar {
+            padding: 1.5rem 4.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-input {
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 6px;
+            padding: .6rem 1rem;
+            color: #fff;
+            font-family: 'Open Sans', sans-serif;
+            font-size: .8rem;
+            transition: border-color .3s;
+            min-width: 220px;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--blue);
+        }
+
+        .filter-input::placeholder {
+            color: var(--muted);
+        }
+
+        .filter-select {
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 6px;
+            padding: .6rem 1rem;
+            color: #fff;
+            font-family: 'Open Sans', sans-serif;
+            font-size: .8rem;
+            transition: border-color .3s;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--blue);
+        }
+
+        .filter-select option {
+            background: #0d1117;
+        }
+
+        .btn-filter {
+            background: var(--blue);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: .6rem 1.4rem;
+            font-family: 'Open Sans', sans-serif;
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: background .3s;
+        }
+
+        .btn-filter:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-reset {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 6px;
+            padding: .6rem 1.1rem;
+            font-family: 'Open Sans', sans-serif;
+            font-size: .75rem;
+            cursor: pointer;
+            transition: all .3s;
+        }
+
+        .btn-reset:hover {
+            color: #fff;
+            border-color: rgba(255, 255, 255, .3);
+        }
+
+        .result-count {
+            margin-left: auto;
+            font-size: .72rem;
+            color: var(--muted);
+        }
+
+        .result-count strong {
+            color: var(--blue);
+        }
+
+        /* ── TABLEAU ── */
+        main {
+            flex: 1;
+            padding: 2rem 4.5rem 3rem;
+        }
+
+        .agents-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .agents-table thead th {
+            font-size: .62rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            padding: .8rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .agents-table tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background .2s;
+        }
+
+        .agents-table tbody tr:hover {
+            background: rgba(255, 255, 255, .025);
+        }
+
+        .agents-table tbody td {
+            padding: 1rem;
+            font-size: .82rem;
+            color: var(--text);
+            vertical-align: middle;
+        }
+
+        .td-ncode {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: .95rem;
+            font-weight: 700;
+            color: var(--blue);
+        }
+
+        .td-name {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .td-name small {
+            display: block;
+            font-size: .7rem;
+            color: var(--muted);
+            font-weight: 400;
+        }
+
+        .td-muted {
+            color: var(--muted);
+            font-size: .75rem;
+        }
+
+        .text-na {
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        /* ── BADGES ── */
+        .badge {
+            display: inline-block;
+            padding: .25rem .75rem;
+            border-radius: 20px;
+            font-size: .65rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .badge-expert   { background: rgba(234, 179, 8, .12);   color: #fbbf24; border: 1px solid rgba(234, 179, 8, .3); }
+        .badge-confirme { background: rgba(37, 99, 235, .15);   color: #60a5fa; border: 1px solid rgba(37, 99, 235, .35); }
+        .badge-novice   { background: rgba(100, 116, 139, .12); color: #94a3b8; border: 1px solid rgba(100, 116, 139, .3); }
+        .badge-double   { background: rgba(239, 68, 68, .1);    color: #f87171; border: 1px solid rgba(239, 68, 68, .25); }
+        .badge-info     { background: rgba(168, 85, 247, .1);   color: #c084fc; border: 1px solid rgba(168, 85, 247, .25); }
+        .badge-cyber    { background: rgba(20, 184, 166, .1);   color: #2dd4bf; border: 1px solid rgba(20, 184, 166, .25); }
+
+        /* ── ETAT VIDE ── */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--muted);
+        }
+
+        .empty-state .empty-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            font-size: .85rem;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 1.5rem 4.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-logo {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 2px;
+        }
+
+        .footer-classified {
+            font-size: .6rem;
+            color: rgba(37, 99, 235, .5);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1024px) {
+            nav, .page-header, .filters-bar, main, footer { padding-left: 2rem; padding-right: 2rem; }
+            .filters-bar  { flex-direction: column; align-items: stretch; }
+            .result-count { margin-left: 0; }
+        }
+
+        @media (max-width: 700px) {
+            .agents-table thead          { display: none; }
+            .agents-table tbody tr       { display: block; padding: 1rem; margin-bottom: .5rem; border: 1px solid var(--border); border-radius: 8px; }
+            .agents-table tbody td       { display: block; padding: .25rem 0; border: none; }
+            .agents-table tbody td::before {
+                content: attr(data-label) ' : ';
+                font-size: .6rem;
+                letter-spacing: 1.5px;
+                text-transform: uppercase;
+                color: var(--muted);
+                margin-right: .3rem;
+            }
+        }
     </style>
 </head>
 <body>
